@@ -1,0 +1,7 @@
+{
+  "name": "prediction-dashboard",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

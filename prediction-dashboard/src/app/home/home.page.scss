@@ -1,0 +1,20 @@
+#container {
+  text-align: center;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 4em;
+
+  a {
+    text-decoration: none;
+  }
+
+  section {
+    max-width: 100%;
+  }
+}

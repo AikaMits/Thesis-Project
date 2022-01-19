@@ -1,0 +1,64 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      Aikaterini Mitsopoulou - Prediction Dashboard
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Aikaterini Mitsopoulou - Prediction Dashboard</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div id="container">
+    <section id="form">
+      <ion-item>
+        <ion-label style="margin-right: 2em">Data</ion-label>
+        <input #file type="file" class="upload" />
+      </ion-item>
+      <ion-item>
+        <ion-label>Model</ion-label>
+        <ion-select #model placeholder="Select One">
+          <ion-select-option value="naive">Naive</ion-select-option>
+          <ion-select-option value="snaive">SNaive</ion-select-option>
+          <ion-select-option value="arima">ARIMA</ion-select-option>
+          <ion-select-option value="lstm">LSTM</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label>Train year</ion-label>
+        <ion-input #trainYear type="text" value="2016"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Forecast year</ion-label>
+        <ion-input #testYear type="text" value="2017"></ion-input>
+      </ion-item>
+      <br>
+      <ion-button (click)="uploadFile(file.files, model.value, trainYear.value, testYear.value)">Upload and Run</ion-button>
+    </section>
+
+    <section *ngIf="predictions.length">
+      <h1>Predictions</h1>
+      <ion-button color="dark" *ngFor="let prediction of predictions" (click)="displayResults(prediction)">{{prediction}}</ion-button>
+    </section>
+
+    <section *ngIf="results">
+      <h2>Results</h2>
+      <p><b>MPA: </b> <span>{{ results.mpa }}</span></p>
+      <p><b>MSE: </b> <span></span>{{ results.mse }}</p>
+      <p><b>MAPE: </b> <span></span>{{ results.mape }}</p>
+    </section>
+
+    <ion-card style="width: 80%;" [style.display]="this.results ? 'block' : 'none'">
+      <ion-card-header>
+        Line Chart
+      </ion-card-header>
+      <ion-card-content>
+        <canvas #lineCanvas></canvas>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
