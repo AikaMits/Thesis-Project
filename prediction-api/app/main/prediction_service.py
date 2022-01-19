@@ -95,6 +95,7 @@ def execute_arima(dataset_file, train_year, test_year, prediction_id):
     predictions = list()
     # walk-forward validation
     for t in range(len(test)):
+        print(f"ARIMA {t} out of {len(test)}")
         model = ARIMA(history, order=(5, 1, 0))
         model_fit = model.fit()
         output = model_fit.forecast()
