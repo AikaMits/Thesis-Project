@@ -47,9 +47,9 @@
 
     <section *ngIf="results">
       <h2>Results</h2>
-      <p><b>MPA: </b> <span>{{ results.mpa }}</span></p>
+      <p><b>MAD: </b> <span>{{ results.mad }}</span></p>
       <p><b>MSE: </b> <span></span>{{ results.mse }}</p>
-      <p><b>MAPE: </b> <span></span>{{ results.mape }}</p>
+      <p><b>RMSE: </b> <span></span>{{ results.rmse }}</p>
     </section>
 
     <ion-card style="width: 80%;" [style.display]="this.results ? 'block' : 'none'">

@@ -2,11 +2,11 @@ import math
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
-from sklearn.metrics import mean_squared_error
+from keras.models import Sequential
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.preprocessing import MinMaxScaler
 
 prediction_results = {}
 
@@ -46,13 +46,13 @@ def execute_naive(dataset_file, train_year, test_year, prediction_id):
     response = {'filename': dataset_file}
     response.update(get_metrics(test, forecast))
 
-    response.update({'train_labels': train.index.tolist()})
+    response.update({'trainLabels': train.index.tolist()})
     response.update({'train': train.values.tolist()})
 
-    response.update({'test_labels': test.index.tolist()})
+    response.update({'testLabels': test.index.tolist()})
     response.update({'test': test.values.tolist()})
 
-    response.update({'forecast_labels': forecast.index.tolist()})
+    response.update({'forecastLabels': forecast.index.tolist()})
     response.update({'forecast': forecast.values.tolist()})
     prediction_results[prediction_id] = response
 
@@ -71,13 +71,13 @@ def execute_snaive(dataset_file, train_year, test_year, prediction_id):
     response = {'filename': dataset_file}
     response.update(get_metrics(test, forecast))
 
-    response.update({'train_labels': train.index.tolist()})
+    response.update({'trainLabels': train.index.tolist()})
     response.update({'train': train.values.tolist()})
 
-    response.update({'test_labels': test.index.tolist()})
+    response.update({'testLabels': test.index.tolist()})
     response.update({'test': test.values.tolist()})
 
-    response.update({'forecast_labels': forecast.index.tolist()})
+    response.update({'forecastLabels': forecast.index.tolist()})
     response.update({'forecast': forecast.values.tolist()})
     prediction_results[prediction_id] = response
 
@@ -110,13 +110,13 @@ def execute_arima(dataset_file, train_year, test_year, prediction_id):
     response = {'filename': dataset_file}
     response.update(get_metrics(test, forecast))
 
-    response.update({'train_labels': train.index.tolist()})
+    response.update({'trainLabels': train.index.tolist()})
     response.update({'train': train.values.tolist()})
 
-    response.update({'test_labels': test.index.tolist()})
+    response.update({'testLabels': test.index.tolist()})
     response.update({'test': test.values.tolist()})
 
-    response.update({'forecast_labels': forecast.index.tolist()})
+    response.update({'forecastLabels': forecast.index.tolist()})
     response.update({'forecast': forecast.values.tolist()})
     prediction_results[prediction_id] = response
 
@@ -195,28 +195,28 @@ def execute_lstm(dataset_file, prediction_id):
     response = {'filename': dataset_file}
     response.update(get_metrics(np.nan_to_num(testPredictPlot), np.nan_to_num(forecast)))
 
-    response.update({'train_labels': [*range(0, dataset.size, 1)]})
+    response.update({'trainLabels': [*range(0, dataset.size, 1)]})
     response.update({'train': np.nan_to_num(trainPredictPlot).tolist()})
 
-    response.update({'test_labels': [*range(trainPredictPlot.size, dataset.size, 1)]})
+    response.update({'testLabels': [*range(trainPredictPlot.size, dataset.size, 1)]})
     response.update({'test': np.nan_to_num(testPredictPlot).tolist()})
 
-    response.update({'forecast_labels': [*range(0, dataset.size, 1)]})
+    response.update({'forecastLabels': [*range(0, dataset.size, 1)]})
     response.update({'forecast': np.nan_to_num(forecast).tolist()})
 
     prediction_results[prediction_id] = response
 
 
-def get_metrics(actual_data, forecast_data):
-    forecast_error = [actual_data[i] - forecast_data[i] for i in range(0, actual_data.size)]
-    mean_absolute_deviation = sum([abs(fe) for fe in forecast_error]) / actual_data.size
-    print(f'MPA: ', mean_absolute_deviation)
-    mean_square_error = sum([(fe ** 2) for fe in forecast_error]) / actual_data.size
-    print(f'MSE: ', mean_square_error)
-    mean_absolute_percent_error = (sum([forecast_error[i] / actual_data[i] for
-                                    i in range(0, len(forecast_error))]) / actual_data.size) * 100
-    print(f'MAPE: ', mean_absolute_percent_error)
+def get_metrics(expected, forecast):
+    mad = mean_absolute_error(expected, forecast)
+    print(f'MAD: ', mad)
 
-    return {'mpa': mean_absolute_deviation,
-            'mse': mean_square_error,
-            'mape': mean_absolute_percent_error}
+    mse = mean_squared_error(expected, forecast)
+    print(f'MSE: ', mse)
+
+    rmse = math.sqrt(mse)
+    print(f'RMSE: ', rmse)
+
+    return {'meanAbsoluteDeviation': mad,
+            'meanSquaredError': mse,
+            'rootMeanSquaredError': rmse}

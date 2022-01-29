@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {Chart, registerables} from "chart.js";
+import {HttpClient} from '@angular/common/http';
+import {Chart, registerables} from 'chart.js';
 
 @Component({
   selector: 'app-home',
@@ -9,13 +9,11 @@ import {Chart, registerables} from "chart.js";
 })
 export class HomePage implements AfterViewInit {
 
-  predictions: any[] = [];
-
-  results: any;
-
   @ViewChild('lineCanvas', {read: ElementRef, static: false})
   private lineCanvas: ElementRef;
 
+  predictions: any[] = [];
+  results: any;
   lineChart: any;
 
   constructor(private http: HttpClient) {
@@ -24,7 +22,7 @@ export class HomePage implements AfterViewInit {
 
   ngAfterViewInit() {
     this.lineChart = new Chart(this.lineCanvas.nativeElement, {
-      type: "line",
+      type: 'line',
       data: {
         labels: [],
         datasets: []
@@ -32,55 +30,60 @@ export class HomePage implements AfterViewInit {
     });
   }
 
-  public uploadFile(files: FileList, model: string, train_year: string, test_year: string) {
+  public uploadFile(files: FileList, model: string, trainYear: string, testYear: string) {
     if(files && files.length > 0) {
-      let file : File = files.item(0);
-      let request: FormData = new FormData();
+      const file: File = files.item(0);
+      const request: FormData = new FormData();
       request.append('file_upload', file, file.name);
-      request.append('train_year', train_year);
-      request.append('test_year', test_year);
+      request.append('train_year', trainYear);
+      request.append('test_year', testYear);
 
-      this.http.post('http://localhost:5000/' + model, request).subscribe(response => {
-        console.log(response)
+      this.http.post('http://localhost:5000/' + model, request).subscribe((response: {id: string}) => {
+        console.log(response);
 
-        this.predictions.push(response['id'])
+        this.predictions.push(response.id);
       });
     }
   }
 
-  displayResults(prediction_id) {
-    this.http.get('http://localhost:5000/prediction?id=' + prediction_id).subscribe(response => {
-      if (response['status']) {
-        console.log(prediction_id + ' ' + response['status'])
+  displayResults(predictionId) {
+    this.http.get('http://localhost:5000/prediction?id=' + predictionId).subscribe((response: {
+      status: string;
+      meanAbsoluteDeviation: number;
+      meanSquaredError: number;
+      rootMeanSquaredError: number;
+      train: string[];
+      trainLabels: string[];
+      test: string[];
+      testLabels: string[];
+      forecast: string[];
+      forecastLabels: string[];
+    }) => {
+      if (response.status) {
+        console.log(predictionId + ' ' + response.status);
         return;
       }
 
       this.results = {
-        mpa: response['mpa'],
-        mse: response['mse'],
-        mape: response['mape'],
-        train: response['train'],
-        train_labels: response['train_labels'],
-        test: response['test'],
-        test_labels: response['test_labels'],
-        forecast: response['forecast'],
-        forecast_labels: response['forecast_labels']
-      }
+        mad: response.meanAbsoluteDeviation,
+        mse: response.meanSquaredError,
+        rmse: response.rootMeanSquaredError,
+        train: response.train,
+        trainLabels: response.trainLabels,
+        test: response.test,
+        testLabels: response.testLabels,
+        forecast: response.forecast,
+        forecastLabels: response.forecastLabels
+      };
 
-      const train = this.results.train_labels.map(function(e, i) {
-        return [e, response['train'][i]];
-      });
+      const train = this.results.trainLabels.map((e, i) => [e, response.train[i]]);
 
-      const test = this.results.test_labels.map(function(e, i) {
-        return [e, response['test'][i]];
-      });
+      const test = this.results.testLabels.map((e, i) => [e, response.test[i]]);
 
-      const forecast = this.results.forecast_labels.map(function(e, i) {
-        return [e, response['forecast'][i]];
-      });
+      const forecast = this.results.forecastLabels.map((e, i) => [e, response.forecast[i]]);
 
       this.lineChart.data = {
-        labels: [... this.results.train_labels, this.results.forecast_labels],
+        labels: [... this.results.trainLabels, this.results.forecastLabels],
         datasets: [
           {
             label: 'Train',
@@ -146,7 +149,7 @@ export class HomePage implements AfterViewInit {
             spanGaps: false,
           },
         ]
-      }
+      };
 
       this.lineChart.update();
     });
