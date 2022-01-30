@@ -121,29 +121,29 @@ def execute_arima(dataset_file, train_year, test_year, prediction_id):
     prediction_results[prediction_id] = response
 
 
-def execute_lstm(dataset_file, prediction_id):
+def execute_lstm(dataset_file, train_year, test_year, prediction_id):
     prediction_results[prediction_id] = {'status': 'processing'}
 
-    dataframe = pd.read_csv(dataset_file, usecols=[1], engine='python')
-    dataset = dataframe.values
-    dataset = dataset.astype('float32')
+    df = parse_file_to_dataframe(dataset_file)
 
     scaler = MinMaxScaler(feature_range=(0, 1))
-    dataset = scaler.fit_transform(dataset)
+    df.iloc[:, :1] = scaler.fit_transform(df)
+
+    dataset = df.values
+    dataset = dataset.astype('float32')
 
     # split into train and test sets
-    train_size = int(len(dataset) * 0.67)
-    test_size = len(dataset) - train_size
-    train, test = dataset[0:train_size, :], dataset[train_size:len(dataset), :]
-    print(len(train), len(test))
+    data_column = df.keys()[0]
+    train = df.loc[train_year][data_column].values
+    test = df.loc[test_year][data_column].values
 
     # convert an array of values into a dataset matrix
     def create_dataset(dataset, look_back=1):
         dataX, dataY = [], []
         for i in range(len(dataset) - look_back - 1):
-            a = dataset[i:(i + look_back), 0]
+            a = dataset[i:(i + look_back)]
             dataX.append(a)
-            dataY.append(dataset[i + look_back, 0])
+            dataY.append(dataset[i + look_back])
         return np.array(dataX), np.array(dataY)
 
     # reshape into X=t and Y=t+1
@@ -177,32 +177,24 @@ def execute_lstm(dataset_file, prediction_id):
     print('Test Score: %.2f RMSE' % (testScore))
 
     # shift train predictions for plotting
-    trainPredictPlot = np.empty_like(dataset)
-    trainPredictPlot[:, :] = np.nan
-    trainPredictPlot[look_back:len(trainPredict) + look_back, :] = trainPredict
-    trainPredictPlot = trainPredictPlot.flatten()
-    trainPredictPlot = trainPredictPlot[~np.isnan(trainPredictPlot)]
+    trainPlot = scaler.inverse_transform(dataset).flatten()[:len(train)]
 
     # shift test predictions for plotting
-    testPredictPlot = np.empty_like(dataset)
-    testPredictPlot[:, :] = np.nan
-    testPredictPlot[len(trainPredict) + (look_back * 2) + 1:len(dataset) - 1, :] = testPredict
-    testPredictPlot = testPredictPlot.flatten()
-    testPredictPlot = testPredictPlot[~np.isnan(testPredictPlot)]
-
-    forecast = scaler.inverse_transform(dataset).flatten()
+    testPlot = testY.flatten()
 
     response = {'filename': dataset_file}
-    response.update(get_metrics(np.nan_to_num(testPredictPlot), np.nan_to_num(forecast)))
+    response.update(get_metrics(np.nan_to_num(testPlot), np.nan_to_num(testPredict.flatten())))
 
-    response.update({'trainLabels': [*range(0, dataset.size, 1)]})
-    response.update({'train': np.nan_to_num(trainPredictPlot).tolist()})
+    trainLabels = df.index.tolist()[0:len(trainPlot)]
+    response.update({'trainLabels': trainLabels})
+    response.update({'train': np.nan_to_num(trainPlot).tolist()})
 
-    response.update({'testLabels': [*range(trainPredictPlot.size, dataset.size, 1)]})
-    response.update({'test': np.nan_to_num(testPredictPlot).tolist()})
+    testLabels = df.index.tolist()[len(trainPlot):len(trainPlot) + len(testPlot)]
+    response.update({'testLabels': testLabels})
+    response.update({'test': np.nan_to_num(testPlot).tolist()})
 
-    response.update({'forecastLabels': [*range(0, dataset.size, 1)]})
-    response.update({'forecast': np.nan_to_num(forecast).tolist()})
+    response.update({'forecastLabels': testLabels})
+    response.update({'forecast': np.nan_to_num(testPredict.flatten()).tolist()})
 
     prediction_results[prediction_id] = response
 

@@ -76,6 +76,6 @@ def lstm():
     test_year = request.form.get('test_year')
     id = f"{uploaded_file.filename}-lstm-{train_year}-{test_year}"
 
-    executor.submit(execute_lstm, filename, id)
+    executor.submit(execute_lstm, filename, train_year, test_year, id)
 
     return {'status': 'submitted', 'id': id}
